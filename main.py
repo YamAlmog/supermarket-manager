@@ -3,7 +3,6 @@ from models import Department, Product
 
 app = FastAPI()
 
-
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
