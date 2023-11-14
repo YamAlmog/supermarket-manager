@@ -8,7 +8,7 @@ app = FastAPI()
 async def root():
     return {"message": "Hello World"}
 
-# init dict of departments
+# init dict of departments and index for the department in dict
 departments = {}
 index = 0
 
@@ -55,8 +55,9 @@ async def delete_department(department_id: int):
         return {"message": f"Department {dep_value} has been DELETED!"}
     raise HTTPException(status_code=404, detail="Department not found")
 
-
-products = []
+# init products dict and a counter for the products
+products = {}
+count = 0
 
 # Get all products
 @app.get("/products")
@@ -66,38 +67,50 @@ async def get_products():
 # Get single product
 @app.get("/products/{product_id}")
 async def get_product(product_id: int):
-    for product in products:
-        if product.id == product_id:
-            return {"Products": product}
+    if product_id in products:
+        key = product_id
+        value = products[product_id]
+        return {"Products": {"Key": key, "Value": value}}
+        
     raise HTTPException(status_code=404, detail="Product not found")
 
 # Create a product
 @app.post("/products")
 async def create_product(product: Product):
-    products.append(product)
-    return {"message": "Product has been added"}
+    global count
+    name = product.name
+    price = product.price
+    quantity = product.quantity
+    department_id = product.department_id
+    if department_id not in departments:
+        raise HTTPException(status_code=400, detail=f"There is no Department with {department_id}")
+    else:
+        specifications = product.specifications
+        prod_tuple = (name, price, quantity, department_id, specifications)
+        products[count] = prod_tuple
+        count += 1
+        return {"message": "Product has been added"}
 
 # Update a Product
 @app.put("/products/{product_id}")
 async def update_product(product_id: int, product_obj: Product):
-    for product in products:
-        if product.id == product_id:
-            product.id == product_obj.id
-            product.name = product_obj.name
-            product.price = product_obj.price
-            product.quantity = product_obj.quantity
-            product.department_id = product_obj.department_id
-            product.specifications = product_obj.specifications
-            return {"Product": product}
+    if product_id in products:
+        name = product_obj.name
+        price = product_obj.price
+        quantity = product_obj.quantity
+        department_id = product_obj.department_id
+        specifications = product_obj.specifications
+        put_tuple = (name, price, quantity, department_id, specifications)
+        products[product_id] = put_tuple
+        return {"Product": {"Key": product_id, "Value": put_tuple}}
     raise HTTPException(status_code=404, detail="Product not found")
 
 # Delete a product
 @app.delete("/products/{product_id}")
 async def delete_product(product_id: int):
-    for product in products:
-        if product.id == product_id:
-            products.remove(product)
-            return {"message": "Product has been DELETED!"}
+    if product_id in products: 
+        prod_value = departments.pop(product_id)
+        return {"message": f"Products {prod_value} has been DELETED!"}
     raise HTTPException(status_code=404, detail="Product not found")
 
 
