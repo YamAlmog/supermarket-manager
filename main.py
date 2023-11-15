@@ -51,8 +51,8 @@ async def update_department(department_id: int, department_obj: Department):
 @app.delete("/departments/{department_id}")
 async def delete_department(department_id: int):
     if department_id in departments: 
-        dep_value = departments.pop(department_id)
-        return {"message": f"Department {dep_value} has been DELETED!"}
+        departments.pop(department_id)
+        return {"message": f"Department id: {department_id} has been DELETED!"}
     raise HTTPException(status_code=404, detail="Department not found")
 
 # init products dict and a counter for the products
@@ -112,8 +112,8 @@ async def update_product(product_id: int, product_obj: Product):
 @app.delete("/products/{product_id}")
 async def delete_product(product_id: int):
     if product_id in products: 
-        prod_value = departments.pop(product_id)
-        return {"message": f"Products {prod_value} has been DELETED!"}
+        products.pop(product_id)
+        return {"message": f"Products id: {product_id} has been DELETED!"}
     raise HTTPException(status_code=404, detail="Product not found")
 
 
