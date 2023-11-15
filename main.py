@@ -100,9 +100,12 @@ async def update_product(product_id: int, product_obj: Product):
         quantity = product_obj.quantity
         department_id = product_obj.department_id
         specifications = product_obj.specifications
-        put_tuple = (name, price, quantity, department_id, specifications)
-        products[product_id] = put_tuple
-        return {"Product": {"Key": product_id, "Value": put_tuple}}
+        if department_id not in departments:
+            raise HTTPException(status_code=400, detail=f"There is no Department with id:{department_id}")    
+        else:    
+            put_tuple = (name, price, quantity, department_id, specifications)
+            products[product_id] = put_tuple
+            return {"Product": {"Key": product_id, "Value": put_tuple}}
     raise HTTPException(status_code=404, detail="Product not found")
 
 # Delete a product
