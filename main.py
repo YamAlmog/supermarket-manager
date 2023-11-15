@@ -10,7 +10,7 @@ async def root():
 
 # init dict of departments and index for the department in dict
 departments = {}
-index = 0
+dep_count = 0
 
 # Get all departments
 @app.get("/departments")
@@ -31,9 +31,9 @@ async def get_department(department_id: int):
 # Create a department
 @app.post("/departments")
 async def create_department(department: Department):
-    global index
-    departments[index]= department.name
-    index += 1
+    global dep_count
+    departments[dep_count]= department.name
+    dep_count += 1
     return {"message": "Department has been added"}
 
 # Update a department
@@ -57,7 +57,7 @@ async def delete_department(department_id: int):
 
 # init products dict and a counter for the products
 products = {}
-count = 0
+prod_count = 0
 
 # Get all products
 @app.get("/products")
@@ -77,18 +77,18 @@ async def get_product(product_id: int):
 # Create a product
 @app.post("/products")
 async def create_product(product: Product):
-    global count
+    global prod_count
     name = product.name
     price = product.price
     quantity = product.quantity
     department_id = product.department_id
+    specifications = product.specifications
     if department_id not in departments:
-        raise HTTPException(status_code=400, detail=f"There is no Department with {department_id}")
+        raise HTTPException(status_code=400, detail=f"There is no Department with id:{department_id}")
     else:
-        specifications = product.specifications
         prod_tuple = (name, price, quantity, department_id, specifications)
-        products[count] = prod_tuple
-        count += 1
+        products[prod_count] = prod_tuple
+        prod_count += 1
         return {"message": "Product has been added"}
 
 # Update a Product
