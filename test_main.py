@@ -8,25 +8,46 @@ def test_if_root_is_correct():
     assert response.status_code == 200
     assert response.json() == {"message": "Hello World"}
 
-def test_get_departments():
-    response = client.get('/departments')
-    assert response.status_code == 200
-    assert "Departments" in response.json()
 
-def test_create_department():
+
+def test_create_and_get_departments():
+
     new_dep = {"name": "dairy"}
     response = client.post('/departments', json=new_dep)
     assert response.status_code == 200
     assert response.json() == {"message": "Department has been added"}
 
-def test_get_specific_department():
-    response = client.get('/departments/0')
+    response = client.get('/departments')
     assert response.status_code == 200
-    assert response.json()["Department"]["Key"] == 0
-    assert response.json()["Department"]["Value"] == "dairy"
+    assert  response.json() == {"Departments": {"0" : "dairy"}}
 
 
-def test_update_department():
+
+
+def test_create_multiple_departments():
+
+    departments_to_test = [{"name": "dairy"},  {"name": "Electronic"},  {"name": "Vegetables"}]
+
+    for department in departments_to_test:
+        response = client.post('/departments', json=department)  
+        assert response.status_code == 200
+        assert response.json() == {"message": "Department has been added"}
+
+    response = client.get('/departments')
+    assert response.status_code == 200
+    assert  response.json() == {"Departments": {"0" : "dairy", "1" : "Electronic" , "2" : "Vegetables"}}
+
+
+# Negativity test 
+def test_department_doesnt_exist():
+    response = client.get('/departments/5')
+    assert response.status_code == 404
+    assert response.json() == {"detail" :"Department not found"}
+
+
+
+
+def test_create_and_update_department():
     update_dep = {"name": "deli"}
     response = client.put('/departments/0', json=update_dep)
     assert response.status_code == 200
@@ -80,7 +101,7 @@ def test_get_specific_product():
                         }
    
     assert response.json() == expected_response
-    #assert response.json()["Products"]["Key"] == 0
+    #assert response.json()["Products"]["Key"] == 1
         
         
 

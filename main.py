@@ -24,7 +24,7 @@ async def get_department(department_id: int):
         key = department_id
         value = departments[department_id]
         return {"Department": {"Key": key, "Value": value}}
-        
+    
     raise HTTPException(status_code=404, detail="Department not found")
 
 
@@ -115,5 +115,11 @@ async def delete_product(product_id: int):
         products.pop(product_id)
         return {"message": f"Products id: {product_id} has been DELETED!"}
     raise HTTPException(status_code=404, detail="Product not found")
+
+
+
+
+
+
 
 
