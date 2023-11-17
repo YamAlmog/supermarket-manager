@@ -6,7 +6,7 @@ client = TestClient(app)
 def test_if_root_is_correct():
     response = client.get('/')
     assert response.status_code == 200
-    assert response.json() == {"message": "Hello World"}
+    assert response.json() == {"message": "Welcome to store API"}
 
 def test_if_clean_function_works():
     response = client.delete('/')
