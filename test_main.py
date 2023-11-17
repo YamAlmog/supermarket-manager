@@ -8,6 +8,12 @@ def test_if_root_is_correct():
     assert response.status_code == 200
     assert response.json() == {"message": "Hello World"}
 
+def test_if_clean_function_works():
+    response = client.delete('/')
+    assert response.status_code == 200
+    assert response.json() == {"message": "Cleaning the departments and products"}
+
+
 # -------------------------------- Department Testing ---------------------------------
 #####################-------------------------------------------#######################
 
@@ -24,6 +30,7 @@ def test_create_and_get_departments():
 
 
 def test_create_multiple_departments():
+    client.delete('/')
     departments_to_test = [{"name": "dairy"},  {"name": "Electronic"},  {"name": "Vegetables"}]
 
     for department in departments_to_test:
@@ -31,9 +38,9 @@ def test_create_multiple_departments():
         assert post_response.status_code == 200
         assert post_response.json() == {"message": "Department has been added"}
 
-    response = client.get('/departments/2')
+    response = client.get('/departments/1')
     assert response.status_code == 200
-    assert  response.json() == {"Department": {"Key": 2, "Value": "Electronic"}}
+    assert  response.json() == {"Department": {"Key": 1, "Value": "Electronic"}}
   
 
 # Negativity test 
@@ -44,6 +51,7 @@ def test_department_doesnt_exist():
 
 
 def test_update_exist_department():
+    client.delete('/')
     new_dep = {"name": "deli"}
     response = client.post('/departments', json=new_dep)
     assert response.status_code == 200
@@ -56,8 +64,9 @@ def test_update_exist_department():
 
 # Negativity test 
 def test_update_not_exist_department():
+    client.delete('/')
     update_dep = {"name": "butcher"}
-    response = client.put('/departments/5', json=update_dep)
+    response = client.put('/departments/0', json=update_dep)
     assert response.status_code == 404
     assert response.json() == {"detail" :"Department not found"}
 
@@ -74,7 +83,7 @@ def test_delete_department():
 
 # Negativity test 
 def test_delete_not_exist_department():
-    response = client.delete("/departments/0")
+    response = client.delete("/departments/2")
     assert response.status_code == 404
     assert response.json() == {"detail" :"Department not found"}
 
@@ -82,10 +91,11 @@ def test_delete_not_exist_department():
 #####################-------------------------------------------#######################
 
 def test_create_and_get_product():
+    client.delete('/')
     new_dep = {"name": "dairy"}
-    response = client.post('/departments', json=new_dep)
-    assert response.status_code == 200
-    assert response.json() == {"message": "Department has been added"}
+    post_response = client.post('/departments', json=new_dep)
+    assert post_response.status_code == 200
+    assert post_response.json() == {"message": "Department has been added"}
     
     new_prod = {
                 "name": "Cheese",
@@ -98,23 +108,24 @@ def test_create_and_get_product():
     assert response.status_code == 200
     assert response.json() == {"message": "Product has been added"}
 
-    response = client.get('/products')
-    assert response.status_code == 200
+    get_response = client.get('/products')
+    assert get_response.status_code == 200
     expected_response = {
                             "Products": {
                                  "0": ["Cheese", 10.9, 12, 0, "fat 25%"]
                             }
                         }
-    assert response.json() == expected_response
+    assert get_response.json() == expected_response
 
 
 def test_create_multiple_products():
+    client.delete('/')
     new_dep = {"name": "dairy"}
     response = client.post('/departments', json=new_dep)
     assert response.status_code == 200
     assert response.json() == {"message": "Department has been added"}
     
-    product_list = [{"name": "Cheese","price": 10.9,"quantity": 12,"department_id": 0,"specifications": "fat 25%"},
+    product_list = [{"name": "Blue cheese","price": 10.9,"quantity": 12,"department_id": 0,"specifications": "fat 25%"},
                     {"name": "Milk", "price": 7.9, "quantity": 20, "department_id": 0,"specifications": "fat 3%"}]
                         
     for product in product_list:                
@@ -127,7 +138,7 @@ def test_create_multiple_products():
     expected_response = {
                             "Products": {
                                 "Key": 0,
-                                "Value": ["Cheese", 10.9, 12, 0, "fat 25%"]
+                                "Value": ["Blue cheese", 10.9, 12, 0, "fat 25%"]
                             }
                         }
     assert response.json() == expected_response
@@ -161,6 +172,7 @@ def test_product_in_wrong_department_id():
 
 
 def test_update_product():
+    client.delete('/')
     new_dep = {"name": "cleaning products"}
     dep_response = client.post('/departments', json=new_dep)
     assert dep_response.status_code == 200
@@ -208,6 +220,8 @@ def test_update_product():
 
 
 def test_delete_product():
+    client.delete('/')
+
     new_dep = {"name": "cleaning products"}
     response = client.post('/departments', json=new_dep)
     assert response.status_code == 200
