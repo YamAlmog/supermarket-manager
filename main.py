@@ -16,8 +16,8 @@ async def root():
     return {"message": "Welcome to store API"}
 
 # create stores
-@app.post("/new_store")
-async def create_store(name: str):
+@app.post("/create_store")
+async def create_store(name : str):
     global store_count
     new_store = Store(name)
     stores[store_count] = new_store
@@ -32,11 +32,12 @@ async def get_stores():
 
 # clean global variables
 @app.delete("/")
-async def clean_departments_and_products(store_id: int):
-    try:
-        return stores[store_id].reset_store()
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+async def clean_departments_and_products():
+    global stores
+    global store_count
+    stores = {}
+    store_count = 0
+    return {"message": "Cleaning the departments and products"}
 
 # Get all departments
 @app.get("/departments")
