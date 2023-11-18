@@ -3,11 +3,12 @@ from models import Department, Product
 from Error import StoreException, StoreExceptionInvalidID
 
 class Store:
-    def __init__(self):
+    def __init__(self, name):
         self.departments = {}
         self.products = {}
         self.department_count = 0
         self.product_count = 0
+        self.name = name
 
     def reset_store(self):
         self.departments = {}
