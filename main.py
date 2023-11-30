@@ -2,14 +2,12 @@ from fastapi import FastAPI, HTTPException
 from models import Department, Product
 from store import Store
 from Error import StoreException, StoreExceptionInvalidID
+from stores_manager import StoresManager
+
 
 app = FastAPI()
+store_manager = StoresManager()
 
-stores = {
-    # id1 : store1
-    # id2 : store2
-}
-store_count = 0
 
 @app.get("/")
 async def root():
@@ -18,16 +16,13 @@ async def root():
 # create stores
 @app.post("/create_store")
 async def create_store(name : str):
-    global store_count
-    new_store = Store(name)
-    stores[store_count] = new_store
-    store_count += 1
-    return {"store has been created"}
+    store_manager.create_store(name)
 
 
 @app.get("/stores")
 async def get_stores():
-    return {"Stores": stores}
+    all_stores = store_manager.get_all_stores()
+    return {"Stores": all_stores}
     
 
 # clean global variables

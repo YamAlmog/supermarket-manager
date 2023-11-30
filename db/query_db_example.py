@@ -17,14 +17,20 @@ cursor = conn.cursor()
 
 # Execute a query
 cursor.execute("SELECT * FROM students")
+def insert_new_department(name:str, store_id:int):       
+    cursor.execute('''INSERT INTO department (department_name, store_id)
+                    VALUES ('{}', {});'''.format(name,store_id))
 
+
+insert_new_department("HR", 2)
+conn.commit()
 # Fetch all the results
-results = cursor.fetchall()
-
-# Print the results
+#results = cursor.fetchall()
+cursor.fetchall()
+'''# Print the results
 for row in results:
     print(row)
-
+'''
 # Close the cursor and connection
 cursor.close()
 conn.close()
