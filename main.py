@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException 
 from models import Department, Product
 from store import Store
-from Error import StoreException, StoreExceptionInvalidID, StoreExceptionInvalidDepartmentID
+from Error import StoreException, StoreExceptionInvalidID, StoreExceptionInvalidDepartmentID, StoreExceptionInvalidProductID
 from stores_manager import StoresManager
 
 
@@ -27,21 +27,23 @@ async def get_stores():
 
 # clean global variables
 @app.delete("/")
-async def clean_departments_and_products():
-    global stores
-    global store_count
-    stores = {}
-    store_count = 0
-    return {"message": "Cleaning the departments and products"}
+async def delete_store(store_id):
+    try:  
+        response = store_manager.delete_store(store_id)  
+        return response
+    except StoreExceptionInvalidID as e:
+        raise HTTPException(status_code=402, detail=str(e))
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
 
 # Get all departments
 @app.get("/departments")
-async def get_departments(store_id: int):
+async def get_departments():
     try:
-        all_departments_from_given_store = store_manager.get_all_departments(store_id)
-        return {"Departments": all_departments_from_given_store}
-    except StoreExceptionInvalidID as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
+        all_departments = store_manager.get_all_departments()
+        return {"Departments": all_departments}
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
 
 # Get single department
 @app.get("/departments/{department_id}")
@@ -55,96 +57,96 @@ async def get_department(department_id: int):
         raise HTTPException(status_code=404, detail=f"Unkown Error: {ex}")
 
     
-
 # Create a department
 @app.post("/departments")
 async def create_department(department: Department, store_id : int):
-    try:    
-        response = store_manager.create_department(department.name, store_id)
+    try:  
+        response = store_manager.create_department(department.department_name, store_id)
         return response
     except StoreExceptionInvalidID as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+        raise HTTPException(status_code=404, detail=str(ex))
     
 
 # Update a department
 @app.put("/departments/{department_id}")
-async def update_department(store_id: int, department_id: int, department_obj: Department):
+async def update_department(department_id: int, department_obj: Department):
     try:
-        response = stores[store_id].update_department(department_id, department_obj.name)
+        response = store_manager.update_department(department_id, department_obj.department_name)
         return response
-    except StoreException as ex:
+    except StoreExceptionInvalidDepartmentID as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as ex:
         raise HTTPException(status_code=404, detail=str(ex))
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
 
 
 # Delete a department
 @app.delete("/departments/{department_id}")
-async def delete_department(store_id: int, department_id: int):
+async def delete_department(department_id: int):
     try:
-        response = stores[store_id].delete_department(department_id)
+        response = store_manager.delete_department(department_id)
         return response
-    except StoreException as ex:
+    except StoreExceptionInvalidDepartmentID as e:
+        raise HTTPException(status_code=402, detail=str(e))
+    except Exception as ex:
         raise HTTPException(status_code=404, detail=str(ex))
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+
 
 # Get all products
 @app.get("/products")
-async def get_products(store_id: int):
+async def get_products():
     try:
-        return {"Products": stores[store_id].products}
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+        all_products = store_manager.get_all_products()
+        return {"Products": all_products}
+    except Exception as ex:
+        raise HTTPException(status_code=404, detail=str(ex))
 
 
 # Get single product
 @app.get("/products/{product_id}")
-async def get_product(store_id: int, product_id: int):
+async def get_product(product_id: int):
     try:    
-        response = stores[store_id].get_selected_product(product_id)
+        response = store_manager.get_specific_product(product_id)
         return response
-    except StoreException as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+    except StoreExceptionInvalidProductID as e:
+        raise HTTPException(status_code=402, detail=str(e))
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=str(ex))
     
 
 # Create a product
 @app.post("/products")
-async def create_product(store_id: int, product: Product):
+async def create_product(product: Product):
     try:
-        response = stores[store_id].create_product(product)
+        response = store_manager.create_product(product.product_name, product.price, product.quantity, product.specifications, product.store_id, product.department_id)
         return response
-    except StoreExceptionInvalidID as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+    except StoreExceptionInvalidID as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except StoreExceptionInvalidDepartmentID as ex:
+        raise HTTPException(status_code=404, detail=str(ex))
     
 
 # Update a Product
 @app.put("/products/{product_id}")
-async def update_product(store_id: int, product_id: int, product_obj: Product):
+async def update_product(product_id: int, product:Product):
     try:    
-        response = stores[store_id].update_selected_product(product_id, product_obj)
+        response = store_manager.update_product(product_id, product.product_name, product.price, product.quantity, product.specifications)
         return response
-    except StoreExceptionInvalidID as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
-    except StoreException as ex:
+    except StoreExceptionInvalidProductID as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as ex:
         raise HTTPException(status_code=404, detail=str(ex))
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+
 
 # Delete a product
 @app.delete("/products/{product_id}")
-async def delete_product(store_id: int, product_id: int):
+async def delete_product(product_id: int):
     try:
-        response = stores[store_id].delete_selected_product(product_id)
+        response = store_manager.delete_product(product_id)
         return response
-    except StoreException as ex:
+    except StoreExceptionInvalidProductID as e:
+        raise HTTPException(status_code=402, detail=str(e))
+    except Exception as ex:
         raise HTTPException(status_code=404, detail=str(ex))
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
 
 
 

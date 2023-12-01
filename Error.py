@@ -11,5 +11,9 @@ class StoreExceptionInvalidDepartmentID(Exception):
     def __init__(self, message):
         super().__init__(message)
 
+class StoreExceptionInvalidProductID(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
 
 

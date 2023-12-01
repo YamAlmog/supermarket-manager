@@ -40,17 +40,16 @@ create_product_table_query = """
 
 
 # Execute the SQL statement
-cursor.execute(create_store_table_query)
+'''cursor.execute(create_store_table_query)
 cursor.execute(create_department_table_query)
-cursor.execute(create_product_table_query)
+cursor.execute(create_product_table_query)'''
 
+add_column_to_product="""ALTER TABLE product
+                        ADD COLUMN price float,
+                        ADD COLUMN quantity int,
+                        ADD COLUMN specifications varchar;"""
 
-# add_values_to_department="""INSERT INTO Department (department_name, store_id)
-#                             VALUES ({},{});""".format("HR",1)
-                                
-# cursor.execute(add_values_to_department)
-
-
+cursor.execute(add_column_to_product)
 # Commit the changes
 conn.commit()
 
