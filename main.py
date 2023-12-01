@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException 
 from models import Department, Product
 from store import Store
-from Error import StoreException, StoreExceptionInvalidID
+from Error import StoreException, StoreExceptionInvalidID, StoreExceptionInvalidDepartmentID
 from stores_manager import StoresManager
 
 
@@ -38,20 +38,19 @@ async def clean_departments_and_products():
 @app.get("/departments")
 async def get_departments(store_id: int):
     try:
-        return {"Departments": stores[store_id].departments}
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+        all_departments_from_given_store = store_manager.get_all_departments(store_id)
+        return {"Departments": all_departments_from_given_store}
+    except StoreExceptionInvalidID as ex:
+        raise HTTPException(status_code=404, detail=str(ex))
 
 # Get single department
 @app.get("/departments/{department_id}")
-async def get_department(department_id: int, store_id: int):
+async def get_department(department_id: int):
     try:
-        response = stores[store_id].get_department(department_id)
+        response = store_manager.get_specific_department(department_id)
         return response
-    except StoreException as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
-    except KeyError as ex:
-        raise HTTPException(status_code=404, detail="Store not found")
+    except StoreExceptionInvalidDepartmentID as ex:
+        raise HTTPException(status_code=401, detail=str(ex))
     except Exception as ex:
         raise HTTPException(status_code=404, detail=f"Unkown Error: {ex}")
 
@@ -61,9 +60,9 @@ async def get_department(department_id: int, store_id: int):
 @app.post("/departments")
 async def create_department(department: Department, store_id : int):
     try:    
-        response = stores[store_id].create_department(department.name)
+        response = store_manager.create_department(department.name, store_id)
         return response
-    except KeyError as ex:
+    except StoreExceptionInvalidID as ex:
         raise HTTPException(status_code=404, detail="Store not found")
     
 

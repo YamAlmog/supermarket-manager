@@ -6,3 +6,10 @@ class StoreException(Exception):
 class StoreExceptionInvalidID(Exception):
     def __init__(self, message):
         super().__init__(message)
+
+class StoreExceptionInvalidDepartmentID(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+
