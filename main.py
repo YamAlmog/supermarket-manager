@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException 
 from models import Department, Product
 from store import Store
-from Error import StoreException, StoreExceptionInvalidID, StoreExceptionInvalidDepartmentID, StoreExceptionInvalidProductID
+from Error import StoreExceptionInvalidID, StoreExceptionInvalidDepartmentID, StoreExceptionInvalidProductID
 from stores_manager import StoresManager
 
 
@@ -22,13 +22,17 @@ async def reset_all():
 # Create a store
 @app.post("/create_store")
 async def create_store(name : str):
-    store_manager.create_store(name)
+    response = store_manager.create_store(name)
+    return response
 
 # Get all stores
 @app.get("/stores")
 async def get_stores():
-    all_stores = store_manager.get_all_stores()
-    return {"Stores": all_stores}
+    try:    
+        all_stores = store_manager.get_all_stores()
+        return {"Stores": all_stores}
+    except Exception as ex:
+            raise HTTPException(status_code=500, detail=str(ex))
 
 # Delete a store    
 @app.delete("/stores")
@@ -37,7 +41,7 @@ async def delete_store(store_id):
         response = store_manager.delete_store(store_id)  
         return response
     except StoreExceptionInvalidID as e:
-        raise HTTPException(status_code=402, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))
 
@@ -67,9 +71,9 @@ async def get_department(department_id: int):
         response = store_manager.get_specific_department(department_id)
         return response
     except StoreExceptionInvalidDepartmentID as ex:
-        raise HTTPException(status_code=401, detail=str(ex))
+        raise HTTPException(status_code=404, detail=str(ex))
     except Exception as ex:
-        raise HTTPException(status_code=404, detail=f"Unkown Error: {ex}")
+        raise HTTPException(status_code=500, detail=f"Unkown Error: {ex}")
 
 # Update a department
 @app.put("/departments/{department_id}")
@@ -80,7 +84,7 @@ async def update_department(department_id: int, department_obj: Department):
     except StoreExceptionInvalidDepartmentID as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
+        raise HTTPException(status_code=500, detail=str(ex))
 
 # Delete a department
 @app.delete("/departments/{department_id}")
@@ -89,9 +93,9 @@ async def delete_department(department_id: int):
         response = store_manager.delete_department(department_id)
         return response
     except StoreExceptionInvalidDepartmentID as e:
-        raise HTTPException(status_code=402, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
+        raise HTTPException(status_code=500, detail=str(ex))
 
 
 
@@ -102,7 +106,7 @@ async def create_product(product: Product):
         response = store_manager.create_product(product.product_name, product.price, product.quantity, product.specifications, product.department_id)
         return response
     except StoreExceptionInvalidDepartmentID as ex:
-        raise HTTPException(status_code=402, detail=str(ex))
+        raise HTTPException(status_code=404, detail=str(ex))
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))
     
@@ -113,7 +117,7 @@ async def get_products():
         all_products = store_manager.get_all_products()
         return {"Products": all_products}
     except Exception as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
+        raise HTTPException(status_code=500, detail=str(ex))
 
 # Get single product
 @app.get("/products/{product_id}")
@@ -122,7 +126,7 @@ async def get_product(product_id: int):
         response = store_manager.get_specific_product(product_id)
         return response
     except StoreExceptionInvalidProductID as e:
-        raise HTTPException(status_code=402, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))
 
@@ -133,9 +137,9 @@ async def update_product(product_id: int, product:Product):
         response = store_manager.update_product(product_id, product.product_name, product.price, product.quantity, product.specifications)
         return response
     except StoreExceptionInvalidProductID as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
+        raise HTTPException(status_code=500, detail=str(ex))
 
 # Delete a product
 @app.delete("/products/{product_id}")
@@ -144,9 +148,9 @@ async def delete_product(product_id: int):
         response = store_manager.delete_product(product_id)
         return response
     except StoreExceptionInvalidProductID as e:
-        raise HTTPException(status_code=402, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as ex:
-        raise HTTPException(status_code=404, detail=str(ex))
+        raise HTTPException(status_code=500, detail=str(ex))
     
 
 

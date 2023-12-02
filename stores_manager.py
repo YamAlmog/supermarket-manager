@@ -133,7 +133,7 @@ class StoresManager:
             is_department_exist = cursor.fetchone()
             if is_department_exist[0] == True:
                 delete_department = f"DELETE FROM department WHERE department_id={department_id};"
-                delete_products = f"DELETE FROM products WHERE department_id={department_id};"
+                delete_products = f"DELETE FROM product WHERE department_id={department_id};"
                 cursor.execute(delete_department)
                 cursor.execute(delete_products)
                 conn.commit()
