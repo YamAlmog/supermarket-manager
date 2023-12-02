@@ -101,9 +101,9 @@ async def delete_department(department_id: int):
 
 # Create a product
 @app.post("/products")
-async def create_product(product: Product):
+async def create_product(product: Product, department_id: int):
     try:
-        response = store_manager.create_product(product.product_name, product.price, product.quantity, product.specifications, product.department_id)
+        response = store_manager.create_product(product.product_name, product.price, product.quantity, product.specifications, department_id)
         return response
     except StoreExceptionInvalidDepartmentID as ex:
         raise HTTPException(status_code=404, detail=str(ex))

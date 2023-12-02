@@ -1,7 +1,7 @@
 
 import psycopg2
 from Error import StoreExceptionInvalidID, StoreException, StoreExceptionInvalidDepartmentID, StoreExceptionInvalidProductID
-
+from models import ProductDetails, DepartmentDetails, Store
 
 class StoresManager:
 
@@ -31,11 +31,12 @@ class StoresManager:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             QUERY = f"Select * from store"
-
             cursor.execute(QUERY)
             results = cursor.fetchall()
+            for row in results:
+                store_details= Store(store_id=row[0], store_name=row[1])
             cursor.close()
-            return results
+            return store_details
         
     # delete specific store included its department and product
     def delete_store(self, store_id: int) :
@@ -53,7 +54,7 @@ class StoresManager:
                 cursor.execute(delete_product_of_this_store)
                 conn.commit()
                 cursor.close()
-                return {"massege": f"Store with id:{store_id} has been deleted included all its products and departments"}
+                return {"message": f"Store with id:{store_id} has been deleted included all its products and departments"}
             else:
                 raise StoreExceptionInvalidID("You selected store_id that does not exist")
 
@@ -71,7 +72,7 @@ class StoresManager:
                 cursor.execute(QUERY)
                 conn.commit()
                 cursor.close()
-                return {"message": "Department has been created"}
+                return {"message": "Department has been added"}
             else:
                 raise StoreExceptionInvalidID("You selected store_id that does not exist")
             
@@ -83,9 +84,14 @@ class StoresManager:
 
             cursor.execute(QUERY)
             result = cursor.fetchall()
+            all_department_details = []
+            for row in result:
+                department_details= DepartmentDetails(department_id=row[0], department_name=row[1], store_id=row[2])
+                all_department_details.append(department_details)
+            
             conn.commit()
             cursor.close()
-            return result
+            return all_department_details
         
     # return specific department
     def get_specific_department(self, department_id: int):
@@ -98,10 +104,11 @@ class StoresManager:
                 QUERY = f"SELECT * FROM department WHERE department_id = {department_id};"
 
                 cursor.execute(QUERY)
-                result = cursor.fetchall()
+                row = cursor.fetchone()
+                department_details= DepartmentDetails(department_id=row[0], department_name=row[1], store_id=row[2])
                 conn.commit()
                 cursor.close()
-                return result
+                return department_details
             else:
                 raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
     
@@ -119,7 +126,7 @@ class StoresManager:
                     cursor.execute(QUERY)
                     conn.commit()
                     cursor.close()
-                    return {"massege": f"Department name of department id: {department_id} was update"}
+                    return {"message": f"Department name of department id: {department_id} was update"}
                 
                 else:
                     raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
@@ -138,7 +145,7 @@ class StoresManager:
                 cursor.execute(delete_products)
                 conn.commit()
                 cursor.close() 
-                return {"massege": f"Department with id:{department_id} has been deleted included all its product"}    
+                return {"message": f"Department with id:{department_id} has been deleted included all its product"}    
             else:
                 raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
     
@@ -159,7 +166,7 @@ class StoresManager:
                     cursor.execute(QUERY)
                     conn.commit()
                     cursor.close()
-                    return {"message": "Product has been created"}
+                    return {"message": "Product has been added"}
                 else:
                     raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
                 
@@ -171,9 +178,31 @@ class StoresManager:
 
             cursor.execute(QUERY)
             result = cursor.fetchall()
+
+            all_product_details_dict = {}
+            """
+            "{ 
+                store_id : [product1, product2, ...]
+                store_id : [product1, product2, ...]
+            }
+            """
+            
+
+            for row in result:
+                # (product_id, product_name, store_id, ..)
+                store_id=f"store_id:{row[2]}"
+                product_details = ProductDetails(product_id=row[0], product_name=row[1], department_id=row[3], price=row[4], quantity=row[5], specifications=row[6])
+                
+                if not store_id in all_product_details_dict:
+                    all_product_details_dict[store_id] = []
+                else:
+                    products_list_for_store = all_product_details_dict[store_id] 
+                    products_list_for_store.append(product_details)
+
+
             conn.commit()
             cursor.close()
-            return result
+            return all_product_details_dict
 
     # return a specific product
     def get_specific_product(self, product_id: int):
@@ -186,10 +215,11 @@ class StoresManager:
                 QUERY = f"SELECT * FROM product WHERE product_id = {product_id};"
 
                 cursor.execute(QUERY)
-                result = cursor.fetchall()
+                row = cursor.fetchone()
+                product_details = ProductDetails(product_id=row[0], product_name=row[1], store_id=row[2], department_id=row[3], price=row[4], quantity=row[5], specifications=row[6])
                 conn.commit()
                 cursor.close()
-                return result
+                return product_details
             else:
                 raise StoreExceptionInvalidProductID("You selected product_id that does not exist")
         
@@ -223,7 +253,7 @@ class StoresManager:
                 cursor.execute(QUERY)
                 conn.commit()
                 cursor.close()
-                return {"massege": f"Product with id:{product_id} has been deleted"}
+                return {"message": f"Product with id:{product_id} has been deleted"}
             else:
                 raise StoreExceptionInvalidProductID("You selected product_id that does not exist")
     
@@ -246,7 +276,7 @@ class StoresManager:
 
             conn.commit()
             cursor.close()
-            return {"massege": f"Complete a general reset of the entire system"}
+            return {"message": "Complete a general reset of the entire system"}
 
 
     

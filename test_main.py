@@ -8,7 +8,7 @@ def setup_test_decorator(original_func):
         print("Clear all stores data")
         client.delete("/")
 
-        # create new store at id 0
+        # create new store at id 1
         response = client.post("/create_store", params={"name": "MyStore"})
         assert response.status_code == 200
         print("Created a new store")
@@ -38,7 +38,7 @@ def test_if_root_is_correct():
 def test_if_clean_function_works():
     response = client.delete('/')
     assert response.status_code == 200
-    assert response.json() == {"message": "Cleaning the departments and products"}
+    assert response.json() == {"message": "Complete a general reset of the entire system"}
 
 
 # -------------------------------- Department Testing ---------------------------------
@@ -46,103 +46,105 @@ def test_if_clean_function_works():
 
 @setup_test_decorator
 def test_create_and_get_departments():
-    new_dep = {"name": "dairy"}
-    response = client.post('/departments', json=new_dep, params={"store_id": 0})
+    new_dep = {"department_name": "dairy"}
+    response = client.post('/departments', json=new_dep, params={"store_id": 1})
     assert response.status_code == 200
     assert response.json() == {"message": "Department has been added"}
 
-    response = client.get('/departments', params={"store_id": 0})
+    response = client.get('/departments')
     assert response.status_code == 200
-    assert  response.json() == {"Departments": {"0" : "dairy"}}
+    assert  response.json() == {"Departments": [{'department_id': 1, 'department_name': 'dairy', 'store_id': 1}]}
 
 
 
 @setup_test_decorator
 def test_create_multiple_departments():
-    departments_to_test = [{"name": "dairy"},  {"name": "Electronic"},  {"name": "Vegetables"}]
+    departments_to_test = [{"department_name": "dairy"},  {"department_name": "Electronic"},  {"department_name": "Vegetables"}]
 
     for department in departments_to_test:
-        post_response = client.post('/departments', json=department, params={"store_id": 0})  
+        post_response = client.post('/departments', json=department, params={"store_id": 1})  
         assert post_response.status_code == 200
         assert post_response.json() == {"message": "Department has been added"}
 
-    response = client.get('/departments/1' , params={"store_id": 0})
+    response = client.get('/departments/1' , params={"store_id": 1})
     assert response.status_code == 200
-    assert  response.json() == {"Department": {"Key": 1, "Value": "Electronic"}}
+    assert  response.json() == {'department_id': 1, 'department_name': 'dairy', 'store_id': 1}
   
 
 # Negativity test 
 @setup_test_decorator
 def test_department_doesnt_exist():
-    response = client.get('/departments/5' , params={"store_id": 0})
+    response = client.get('/departments/5' , params={"store_id": 1})
     assert response.status_code == 404
-    assert response.json() == {"detail" :"Department not found"}
+    assert response.json() == {"detail" :"You selected department_id that does not exist"}
 
 
 @setup_test_decorator
 def test_update_exist_department():
-    new_dep = {"name": "deli"}
-    response = client.post('/departments', json=new_dep, params={"store_id": 0})
+    new_dep = {"department_name": "deli"}
+    response = client.post('/departments', json=new_dep, params={"store_id": 1})
     assert response.status_code == 200
     assert response.json() == {"message": "Department has been added"}
     
-    update_dep = {"name": "butcher"}
-    response = client.put('/departments/0', json=update_dep, params={"store_id": 0})
+    update_dep = {"department_name": "butcher"}
+    response = client.put('/departments/1', json=update_dep, params={"store_id": 1})
     assert response.status_code == 200
-    assert response.json() == {"Department": {"Key": 0, "Value": "butcher"}}
+    assert response.json() == {"message": "Department name of department id: 1 was update"}
 
 # Negativity test 
 @setup_test_decorator
 def test_update_not_exist_department():
-    update_dep = {"name": "butcher"}
+    update_dep = {"department_name": "butcher"}
     response = client.put('/departments/0', json=update_dep, params={"store_id": 0})
     assert response.status_code == 404
-    assert response.json() == {"detail" :"Department not found"}
+    assert response.json() == {"detail" :"You selected department_id that does not exist"}
 
 @setup_test_decorator
 def test_delete_department():
-    new_dep = {"name": "dairy"}
-    response = client.post('/departments', json=new_dep, params={"store_id": 0})
+    new_dep = {"department_name": "dairy"}
+    response = client.post('/departments', json=new_dep, params={"store_id": 1})
     assert response.status_code == 200
     assert response.json() == {"message": "Department has been added"}
     
-    response = client.delete("/departments/0" , params={"store_id": 0})
+    response = client.delete("/departments/1")
     assert response.status_code == 200
-    assert response.json() == {"message": f"Department id: {0} has been DELETED!"}
+    assert response.json() == {"message": "Department with id:1 has been deleted included all its product"}
 
 # Negativity test 
 @setup_test_decorator
 def test_delete_not_exist_department():
-    response = client.delete("/departments/2", params={"store_id": 0})
+    response = client.delete("/departments/2")
     assert response.status_code == 404
-    assert response.json() == {"detail" :"Department not found"}
+    assert response.json() == {"detail" :"You selected department_id that does not exist"}
 
 # -------------------------------- Product Testing ------------------------------------
 #####################-------------------------------------------#######################
 
 @setup_test_decorator
 def test_create_and_get_product():
-    new_dep = {"name": "dairy"}
-    post_response = client.post('/departments', json=new_dep, params={"store_id": 0})
+    new_dep = {"department_name": "dairy"}
+    post_response = client.post('/departments', json=new_dep, params={"store_id": 1})
     assert post_response.status_code == 200
     assert post_response.json() == {"message": "Department has been added"}
     
     new_prod = {
-                "name": "Cheese",
+                "product_name": "Cheese",
                 "price": 10.9,
                 "quantity": 12,
-                "department_id": 0,
                 "specifications": "fat 25%"
                 }
-    response = client.post('/products', json=new_prod, params={"store_id": 0})
+    response = client.post('/products', json=new_prod, params={"department_id": 1})
     assert response.status_code == 200
     assert response.json() == {"message": "Product has been added"}
 
-    get_response = client.get('/products', params={"store_id": 0})
+    get_response = client.get('/products')
     assert get_response.status_code == 200
     expected_response = {
                             "Products": {
-                                 "0": ["Cheese", 10.9, 12, 0, "fat 25%"]
+                                "product_name": "Cheese",
+                                "price": 10.9,
+                                "quantity": 12,
+                                "specifications": "fat 25%"
                             }
                         }
     assert get_response.json() == expected_response
