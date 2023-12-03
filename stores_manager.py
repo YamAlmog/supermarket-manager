@@ -33,10 +33,12 @@ class StoresManager:
             QUERY = f"Select * from store"
             cursor.execute(QUERY)
             results = cursor.fetchall()
+            all_store_details = []
             for row in results:
                 store_details= Store(store_id=row[0], store_name=row[1])
+                all_store_details.append(store_details)
             cursor.close()
-            return store_details
+            return all_store_details
         
     # delete specific store included its department and product
     def delete_store(self, store_id: int) :
@@ -178,31 +180,33 @@ class StoresManager:
 
             cursor.execute(QUERY)
             result = cursor.fetchall()
-
-            all_product_details_dict = {}
+            
+            product_dict_by_store = {}
             """
-            "{ 
-                store_id : [product1, product2, ...]
-                store_id : [product1, product2, ...]
+            { 
+                store_id:2 : [products_list_for_store]
+                store_id:3 : [products_list_for_store]
+                ...
             }
             """
-            
-
             for row in result:
-                # (product_id, product_name, store_id, ..)
-                store_id=f"store_id:{row[2]}"
+                products_list_for_store = []
+                               
                 product_details = ProductDetails(product_id=row[0], product_name=row[1], department_id=row[3], price=row[4], quantity=row[5], specifications=row[6])
                 
-                if not store_id in all_product_details_dict:
-                    all_product_details_dict[store_id] = []
-                else:
-                    products_list_for_store = all_product_details_dict[store_id] 
+                store_id = row[2]
+                # insert product into store_details dict so the key is store_id(row[2]) and value is list of products
+                if store_id in product_dict_by_store:
+                    products_list_for_store = product_dict_by_store[store_id] 
                     products_list_for_store.append(product_details)
-
+                    product_dict_by_store[store_id] = products_list_for_store
+                else:
+                    products_list_for_store.append(product_details)
+                    product_dict_by_store[store_id] = products_list_for_store
 
             conn.commit()
             cursor.close()
-            return all_product_details_dict
+            return product_dict_by_store
 
     # return a specific product
     def get_specific_product(self, product_id: int):

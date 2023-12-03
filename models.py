@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional
+from typing import List
 
 class Store(BaseModel):
     store_id: int
@@ -23,4 +24,8 @@ class Product(BaseModel):
 class ProductDetails(Product):
     product_id: int
     department_id: int
+
+
+class StoreDetails(Store):
+    products : List[ProductDetails]
 
