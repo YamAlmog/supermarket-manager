@@ -1,7 +1,7 @@
 
 import psycopg2
 from Error import StoreExceptionInvalidID, StoreException, StoreExceptionInvalidDepartmentID, StoreExceptionInvalidProductID
-from models import ProductDetails, DepartmentDetails, Store
+from models import ProductDetails, DepartmentDetails, Store, StoreDetails
 
 class StoresManager:
 
@@ -16,7 +16,7 @@ class StoresManager:
         }
 
     # create new store. return store id
-    def create_store(self, name: str):
+    def create_store(self, name: str) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             QUERY = f"INSERT INTO store (store_name) VALUES ('{name}')"
@@ -24,10 +24,10 @@ class StoresManager:
             cursor.execute(QUERY)
             conn.commit()
             cursor.close()
-            return {"message": "Store has been created"}
+            return "Store has been created"
 
     # return all stores
-    def get_all_stores(self):
+    def get_all_stores(self) -> list:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             QUERY = f"Select * from store"
@@ -41,7 +41,7 @@ class StoresManager:
             return all_store_details
         
     # delete specific store included its department and product
-    def delete_store(self, store_id: int) :
+    def delete_store(self, store_id: int) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             IS_STORE_EXIST = f"SELECT EXISTS (SELECT 1 FROM store WHERE store_id = {store_id});"
@@ -56,13 +56,13 @@ class StoresManager:
                 cursor.execute(delete_product_of_this_store)
                 conn.commit()
                 cursor.close()
-                return {"message": f"Store with id:{store_id} has been deleted included all its products and departments"}
+                return f"Store with id:{store_id} has been deleted included all its products and departments"
             else:
                 raise StoreExceptionInvalidID("You selected store_id that does not exist")
 
         
     # create new department
-    def create_department(self, name: str , store_id: int):
+    def create_department(self, name: str , store_id: int) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             IS_STORE_EXIST = f"SELECT EXISTS (SELECT 1 FROM store WHERE store_id = {store_id});"
@@ -74,12 +74,12 @@ class StoresManager:
                 cursor.execute(QUERY)
                 conn.commit()
                 cursor.close()
-                return {"message": "Department has been added"}
+                return "Department has been added"
             else:
                 raise StoreExceptionInvalidID("You selected store_id that does not exist")
             
     # return all departments
-    def get_all_departments(self):
+    def get_all_departments(self) -> list:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             QUERY = f"SELECT * FROM department;"
@@ -96,7 +96,7 @@ class StoresManager:
             return all_department_details
         
     # return specific department
-    def get_specific_department(self, department_id: int):
+    def get_specific_department(self, department_id: int) -> DepartmentDetails:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             IS_DEPARTMENT_EXIST = f"SELECT EXISTS (SELECT 1 FROM department WHERE department_id = {department_id});"
@@ -115,7 +115,7 @@ class StoresManager:
                 raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
     
     # update a department name
-    def update_department(self, department_id: int, name: str):
+    def update_department(self, department_id: int, name: str) -> str:
          with psycopg2.connect(**self.db_params) as conn:
                 cursor = conn.cursor()
                 IS_DEPARTMENT_EXIST = f"SELECT EXISTS (SELECT 1 FROM department WHERE department_id = {department_id});"
@@ -128,13 +128,13 @@ class StoresManager:
                     cursor.execute(QUERY)
                     conn.commit()
                     cursor.close()
-                    return {"message": f"Department name of department id: {department_id} was update"}
+                    return f"Department name of department id: {department_id} was update"
                 
                 else:
                     raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
 
     # delete a department
-    def delete_department(self, department_id: int):
+    def delete_department(self, department_id: int) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             IS_DEPARTMENT_EXIST = f"SELECT EXISTS (SELECT 1 FROM department WHERE department_id = {department_id});"
@@ -147,12 +147,12 @@ class StoresManager:
                 cursor.execute(delete_products)
                 conn.commit()
                 cursor.close() 
-                return {"message": f"Department with id:{department_id} has been deleted included all its product"}    
+                return f"Department with id:{department_id} has been deleted included all its product"   
             else:
                 raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
     
     # create new product
-    def create_product(self, name: str, price: float, quantity: int, specifications: str, department_id: int):
+    def create_product(self, name: str, price: float, quantity: int, specifications: str, department_id: int) -> str:
             with psycopg2.connect(**self.db_params) as conn:
                 cursor = conn.cursor()
                
@@ -168,7 +168,7 @@ class StoresManager:
                     cursor.execute(QUERY)
                     conn.commit()
                     cursor.close()
-                    return {"message": "Product has been added"}
+                    return "Product has been added"
                 else:
                     raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
                 
@@ -181,12 +181,13 @@ class StoresManager:
             cursor.execute(QUERY)
             result = cursor.fetchall()
             
-            product_dict_by_store = {}
+            products_by_store = []
+            store_details = StoreDetails
             """
             { 
-                store_id:2 : [products_list_for_store]
-                store_id:3 : [products_list_for_store]
-                ...
+                store_id : 1 
+                store_name : "my_store"
+                products : [products_list_for_store]
             }
             """
             for row in result:
@@ -196,20 +197,26 @@ class StoresManager:
                 
                 store_id = row[2]
                 # insert product into store_details dict so the key is store_id(row[2]) and value is list of products
-                if store_id in product_dict_by_store:
-                    products_list_for_store = product_dict_by_store[store_id] 
-                    products_list_for_store.append(product_details)
-                    product_dict_by_store[store_id] = products_list_for_store
+                store_exists = any(store["store_id"] == store_id for store in products_by_store)
+                
+                # if store_details have store with id=row[0]- insert the new product to it
+                if store_exists:
+                    products_list_for_store #should be products list of store_details
+                    products_list_for_store.append(product_details) #add the new product_details to product list
+                    # update the product list of store_details 
+                
+                # else we would like to create new store detail and insert first product to it
                 else:
+                    
                     products_list_for_store.append(product_details)
-                    product_dict_by_store[store_id] = products_list_for_store
+                    store_details = StoreDetails(store_id=store_id, store_name='none', products=products_list_for_store)
 
             conn.commit()
             cursor.close()
-            return product_dict_by_store
+            return products_by_store
 
     # return a specific product
-    def get_specific_product(self, product_id: int):
+    def get_specific_product(self, product_id: int) -> ProductDetails:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             IS_PRODUCT_EXIST = f"SELECT EXISTS (SELECT 1 FROM product WHERE product_id = {product_id})"
@@ -228,7 +235,7 @@ class StoresManager:
                 raise StoreExceptionInvalidProductID("You selected product_id that does not exist")
         
     # update product features
-    def update_product(self, product_id:int, name:str, price:float, quantity:int, specifications:str):
+    def update_product(self, product_id:int, name:str, price:float, quantity:int, specifications:str) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             IS_PRODUCT_EXIST = f"SELECT EXISTS (SELECT 1 FROM product WHERE product_id = {product_id})"
@@ -241,12 +248,12 @@ class StoresManager:
                 cursor.execute(QUERY)
                 conn.commit()
                 cursor.close()
-                return {"message": f"Product with id:{product_id} has been update"}
+                return f"Product with id:{product_id} has been update"
             else:
                 raise StoreExceptionInvalidProductID("You selected product_id that does not exist")
 
     # delete a product
-    def delete_product(self, product_id):
+    def delete_product(self, product_id) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             IS_PRODUCT_EXIST = f"SELECT EXISTS (SELECT 1 FROM product WHERE product_id = {product_id})"
@@ -257,12 +264,12 @@ class StoresManager:
                 cursor.execute(QUERY)
                 conn.commit()
                 cursor.close()
-                return {"message": f"Product with id:{product_id} has been deleted"}
+                return f"Product with id:{product_id} has been deleted"
             else:
                 raise StoreExceptionInvalidProductID("You selected product_id that does not exist")
     
     # reset the entire system 
-    def reset_all(self):
+    def reset_all(self) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
             reset_stores = """DELETE FROM store;"""
@@ -280,7 +287,7 @@ class StoresManager:
 
             conn.commit()
             cursor.close()
-            return {"message": "Complete a general reset of the entire system"}
+            return "Complete a general reset of the entire system"
 
 
     
