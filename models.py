@@ -21,6 +21,13 @@ class Product(BaseModel):
     specifications: Optional[str] = None
 
 
+class UpdateProductInput(BaseModel):
+    product_name: Optional[str] = None
+    price: Optional[float] = None
+    quantity: Optional[int] = None
+    specifications: Optional[str] = None
+
+
 class ProductDetails(Product):
     product_id: int
     department_id: int

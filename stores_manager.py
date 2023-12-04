@@ -172,48 +172,38 @@ class StoresManager:
                 else:
                     raise StoreExceptionInvalidDepartmentID("You selected department_id that does not exist")
                 
-    # return all the products
+    # return all the product
     def get_all_products(self):
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
-            QUERY = f"SELECT * FROM product;"
 
-            cursor.execute(QUERY)
-            result = cursor.fetchall()
-            
-            products_by_store = []
-            store_details = StoreDetails
-            """
-            { 
-                store_id : 1 
-                store_name : "my_store"
-                products : [products_list_for_store]
-            }
-            """
-            for row in result:
-                products_list_for_store = []
-                               
-                product_details = ProductDetails(product_id=row[0], product_name=row[1], department_id=row[3], price=row[4], quantity=row[5], specifications=row[6])
-                
-                store_id = row[2]
-                # insert product into store_details dict so the key is store_id(row[2]) and value is list of products
-                store_exists = any(store["store_id"] == store_id for store in products_by_store)
-                
-                # if store_details have store with id=row[0]- insert the new product to it
-                if store_exists:
-                    products_list_for_store #should be products list of store_details
-                    products_list_for_store.append(product_details) #add the new product_details to product list
-                    # update the product list of store_details 
-                
-                # else we would like to create new store detail and insert first product to it
-                else:
-                    
-                    products_list_for_store.append(product_details)
-                    store_details = StoreDetails(store_id=store_id, store_name='none', products=products_list_for_store)
+            # Get all stores and insert them into all_stores collection
+            all_stores = {}
 
-            conn.commit()
+            GET_STORES_QUERY = "SELECT * FROM store;"
+            cursor.execute(GET_STORES_QUERY)
+            results = cursor.fetchall()
+
+            for store_row in results:
+                current_store_id =store_row[0]
+                all_stores[current_store_id] = StoreDetails(store_id=current_store_id, store_name=store_row[1], products=[])
+
+            # Get all products. for each product, insert it into the matching store
+            GET_PRODUCTS_QUERY = f"SELECT * FROM product;"
+            cursor.execute(GET_PRODUCTS_QUERY)
+            results = cursor.fetchall()
+
+            for product_row in results:
+                # find the matching store for this product 
+                store_id = product_row[2]
+                store = all_stores[store_id]
+
+                product_details = ProductDetails(product_id=product_row[0], product_name=product_row[1], department_id=product_row[3], price=product_row[4], quantity=product_row[5], specifications=product_row[6])
+                store.products.append(product_details)
+                
             cursor.close()
-            return products_by_store
+
+            return all_stores
 
     # return a specific product
     def get_specific_product(self, product_id: int) -> ProductDetails:
