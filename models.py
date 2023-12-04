@@ -36,3 +36,6 @@ class ProductDetails(Product):
 class StoreDetails(Store):
     products : List[ProductDetails]
 
+class StoreDepartmentDetails(Store):
+    departments : List[DepartmentDetails]
+

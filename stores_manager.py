@@ -1,7 +1,13 @@
 
 import psycopg2
 from Error import StoreExceptionInvalidID, StoreException, StoreExceptionInvalidDepartmentID, StoreExceptionInvalidProductID
-from models import ProductDetails, DepartmentDetails, Store, StoreDetails
+from models import ProductDetails, DepartmentDetails, Store, StoreDetails, StoreDepartmentDetails
+'''import os
+from dotenv import load_dotenv, dotenv_values
+load_dotenv()
+
+user_name = os.getenv('USER_NAME')
+user_password = os.getenv('USER_PASSWORD')'''
 
 class StoresManager:
 
@@ -82,18 +88,30 @@ class StoresManager:
     def get_all_departments(self) -> list:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
-            QUERY = f"SELECT * FROM department;"
+            GET_STORE_QUERY = "select * from store"
+            cursor.execute(GET_STORE_QUERY)
+            results = cursor.fetchall()
+            all_stores = {}
+            for store_row in results:
+                current_store_id = store_row[0]
+                store_details = StoreDepartmentDetails(store_id=current_store_id, store_name=store_row[1], departments=[])  
+                all_stores[current_store_id] = store_details   
 
-            cursor.execute(QUERY)
-            result = cursor.fetchall()
-            all_department_details = []
-            for row in result:
-                department_details= DepartmentDetails(department_id=row[0], department_name=row[1], store_id=row[2])
-                all_department_details.append(department_details)
+
+            GET_DEPARTMENT_QUERY = f"SELECT * FROM department;"
+            cursor.execute(GET_DEPARTMENT_QUERY)
+            results = cursor.fetchall()
+            
+            for department_row in results:
+                current_store_id = department_row[2]
+                store = all_stores[current_store_id]
+
+                department_details = DepartmentDetails(department_id=department_row[0], department_name=department_row[1], store_id=current_store_id)
+                store.departments.append(department_details)
             
             conn.commit()
             cursor.close()
-            return all_department_details
+            return all_stores
         
     # return specific department
     def get_specific_department(self, department_id: int) -> DepartmentDetails:
@@ -232,8 +250,16 @@ class StoresManager:
             cursor.execute(IS_PRODUCT_EXIST)
             is_product_exist = cursor.fetchone()
             if is_product_exist[0] == True:
+                FIND_PRODUCT = f"SELECT * FROM product WHERE product_id = {product_id}"
+                cursor.execute(FIND_PRODUCT)
+                original_product = cursor.fetchone()
+                current_name = original_product[1] if name == None else name
+                current_price = original_product[4] if price == None else price
+                current_quantity = original_product[5] if quantity == None else quantity
+                current_specifications = original_product[6] if specifications == None else specifications
+
                 QUERY = f"""UPDATE product
-                            SET product_name = '{name}', price = {price}, quantity = {quantity}, specifications = '{specifications}'
+                            SET product_name = '{current_name}', price = {current_price}, quantity = {current_quantity}, specifications = '{current_specifications}'
                             WHERE product_id = {product_id};"""
                 cursor.execute(QUERY)
                 conn.commit()
