@@ -14,19 +14,13 @@ class StoresManager:
 
     def __init__(self):
         # Initialize db connections 
-        self.db_params = {
-            'host': 'localhost',
-            'port': 5432,
-            'database': database_name,
-            'user': user_name,
-            'password': user_password,
-        }
+        self.db_url = os.getenv("DATABASE_URL")
 
         
 
     # create new store. return store id
     def create_store(self, name: str) -> str:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             create_table_query = """
                                 CREATE TABLE IF NOT EXISTS store (
@@ -44,7 +38,7 @@ class StoresManager:
 
     # return all stores
     def get_all_stores(self) -> list:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             QUERY = f"Select * from store"
             cursor.execute(QUERY)
@@ -58,7 +52,7 @@ class StoresManager:
         
     # delete specific store included its department and product
     def delete_store(self, store_id: int) -> str:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             IS_STORE_EXIST = f"SELECT EXISTS (SELECT 1 FROM store WHERE store_id = {store_id});"
             cursor.execute(IS_STORE_EXIST)
@@ -79,7 +73,7 @@ class StoresManager:
         
     # create new department
     def create_department(self, name: str , store_id: int) -> str:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             create_department_table = '''
                                         CREATE TABLE IF NOT EXISTS department (
@@ -106,7 +100,7 @@ class StoresManager:
             
     # return all departments
     def get_all_departments(self) -> list:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             GET_STORE_QUERY = "select * from store"
             cursor.execute(GET_STORE_QUERY)
@@ -135,7 +129,7 @@ class StoresManager:
         
     # return specific department
     def get_specific_department(self, department_id: int) -> DepartmentDetails:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             IS_DEPARTMENT_EXIST = f"SELECT EXISTS (SELECT 1 FROM department WHERE department_id = {department_id});"
             cursor.execute(IS_DEPARTMENT_EXIST)
@@ -154,7 +148,7 @@ class StoresManager:
     
     # update a department name
     def update_department(self, department_id: int, name: str) -> str:
-         with psycopg2.connect(**self.db_params) as conn:
+         with psycopg2.connect(self.db_url) as conn:
                 cursor = conn.cursor()
                 IS_DEPARTMENT_EXIST = f"SELECT EXISTS (SELECT 1 FROM department WHERE department_id = {department_id});"
                 cursor.execute(IS_DEPARTMENT_EXIST)
@@ -173,7 +167,7 @@ class StoresManager:
 
     # delete a department
     def delete_department(self, department_id: int) -> str:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             IS_DEPARTMENT_EXIST = f"SELECT EXISTS (SELECT 1 FROM department WHERE department_id = {department_id});"
             cursor.execute(IS_DEPARTMENT_EXIST)
@@ -191,7 +185,7 @@ class StoresManager:
     
     # create new product
     def create_product(self, name: str, price: float, quantity: int, specifications: str, department_id: int) -> str:
-            with psycopg2.connect(**self.db_params) as conn:
+            with psycopg2.connect(self.db_url) as conn:
                 cursor = conn.cursor()
 
                 create_product_table = '''
@@ -226,7 +220,7 @@ class StoresManager:
                 
     # return all the product
     def get_all_products(self):
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
 
             # Get all stores and insert them into all_stores collection
@@ -259,7 +253,7 @@ class StoresManager:
 
     # return a specific product
     def get_specific_product(self, product_id: int) -> ProductDetails:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             IS_PRODUCT_EXIST = f"SELECT EXISTS (SELECT 1 FROM product WHERE product_id = {product_id})"
             cursor.execute(IS_PRODUCT_EXIST)
@@ -278,7 +272,7 @@ class StoresManager:
         
     # update product features
     def update_product(self, product_id:int, name:str, price:float, quantity:int, specifications:str) -> str:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             IS_PRODUCT_EXIST = f"SELECT EXISTS (SELECT 1 FROM product WHERE product_id = {product_id})"
             cursor.execute(IS_PRODUCT_EXIST)
@@ -304,7 +298,7 @@ class StoresManager:
 
     # delete a product
     def delete_product(self, product_id) -> str:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             IS_PRODUCT_EXIST = f"SELECT EXISTS (SELECT 1 FROM product WHERE product_id = {product_id})"
             cursor.execute(IS_PRODUCT_EXIST)
@@ -320,7 +314,7 @@ class StoresManager:
     
     # reset the entire system 
     def reset_all(self) -> str:
-        with psycopg2.connect(**self.db_params) as conn:
+        with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             reset_stores = """DELETE FROM store;"""
             reset_departments = """DELETE FROM department;"""
