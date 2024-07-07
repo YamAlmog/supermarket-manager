@@ -21,8 +21,6 @@ def setup_test_decorator(original_func):
 
 
 
-
-
 @setup_test_decorator
 def test_new_store():
     response = client.post("/create_store", params={"name": "MyStore"})

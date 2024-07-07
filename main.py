@@ -120,7 +120,7 @@ async def get_products():
         raise HTTPException(status_code=500, detail=str(ex))
 
 # Get single product
-@app.get("/products/{product_id}")
+@app.get("/products")
 async def get_product(product_id: int):
     try:    
         response = store_manager.get_specific_product(product_id)

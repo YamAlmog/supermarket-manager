@@ -2,12 +2,13 @@
 import psycopg2
 from Error import StoreExceptionInvalidID, StoreException, StoreExceptionInvalidDepartmentID, StoreExceptionInvalidProductID
 from models import ProductDetails, DepartmentDetails, Store, StoreDetails, StoreDepartmentDetails
-'''import os
+import os
 from dotenv import load_dotenv, dotenv_values
 load_dotenv()
 
 user_name = os.getenv('USER_NAME')
-user_password = os.getenv('USER_PASSWORD')'''
+user_password = os.getenv('USER_PASSWORD')
+database_name = os.getenv('POSTGRES_DB')
 
 class StoresManager:
 
@@ -16,17 +17,26 @@ class StoresManager:
         self.db_params = {
             'host': 'localhost',
             'port': 5432,
-            'database': 'Learning',
-            'user': 'postgres',
-            'password': '123456',
+            'database': database_name,
+            'user': user_name,
+            'password': user_password,
         }
+
+        
 
     # create new store. return store id
     def create_store(self, name: str) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
+            create_table_query = """
+                                CREATE TABLE IF NOT EXISTS store (
+                                    store_id SERIAL PRIMARY KEY,
+                                    store_name VARCHAR(255) NOT NULL
+                                );
+                                """
             QUERY = f"INSERT INTO store (store_name) VALUES ('{name}')"
-
+            # Create table if it doesn't exist
+            cursor.execute(create_table_query)
             cursor.execute(QUERY)
             conn.commit()
             cursor.close()
@@ -71,12 +81,22 @@ class StoresManager:
     def create_department(self, name: str , store_id: int) -> str:
         with psycopg2.connect(**self.db_params) as conn:
             cursor = conn.cursor()
+            create_department_table = '''
+                                        CREATE TABLE IF NOT EXISTS department (
+                                        department_id SERIAL PRIMARY KEY,
+                                        department_name VARCHAR(255) NOT NULL,
+                                        store_id INT NOT NULL,
+                                        FOREIGN KEY (store_id) REFERENCES store(store_id)
+                                    );
+                                    '''
+            cursor.execute(create_department_table)
+
             IS_STORE_EXIST = f"SELECT EXISTS (SELECT 1 FROM store WHERE store_id = {store_id});"
+            
             cursor.execute(IS_STORE_EXIST)
             is_exist = cursor.fetchone()
             if is_exist[0] == True:
                 QUERY = f"INSERT INTO department (department_name, store_id) VALUES ('{name}',{store_id});"
-
                 cursor.execute(QUERY)
                 conn.commit()
                 cursor.close()
@@ -173,7 +193,21 @@ class StoresManager:
     def create_product(self, name: str, price: float, quantity: int, specifications: str, department_id: int) -> str:
             with psycopg2.connect(**self.db_params) as conn:
                 cursor = conn.cursor()
-               
+
+                create_product_table = '''
+                                        CREATE TABLE IF NOT EXISTS product (
+                                        product_id SERIAL PRIMARY KEY,
+                                        product_name VARCHAR(255) NOT NULL,
+                                        price DECIMAL(10, 2) NOT NULL,
+                                        quantity INT NOT NULL,
+                                        specifications TEXT,
+                                        store_id INT NOT NULL,
+                                        department_id INT NOT NULL,
+                                        FOREIGN KEY (store_id) REFERENCES store(store_id),
+                                        FOREIGN KEY (department_id) REFERENCES department(department_id)
+                                    );
+                                    '''
+                cursor.execute(create_product_table)
                 IS_DEPARTMENT_EXIST = f"SELECT EXISTS (SELECT 1 FROM department WHERE department_id = {department_id});"
                 cursor.execute(IS_DEPARTMENT_EXIST)
                 is_department_exist = cursor.fetchone()
