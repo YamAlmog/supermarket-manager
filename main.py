@@ -65,7 +65,7 @@ async def get_departments():
         raise HTTPException(status_code=500, detail=str(ex))
 
 # Get single department
-@app.get("/departments/{department_id}")
+@app.get("/specific_department")
 async def get_department(department_id: int):
     try:
         response = store_manager.get_specific_department(department_id)
@@ -76,7 +76,7 @@ async def get_department(department_id: int):
         raise HTTPException(status_code=500, detail=f"Unknown Error: {ex}")
 
 # Update a department
-@app.put("/departments/{department_id}")
+@app.put("/departments")
 async def update_department(department_id: int, department_obj: Department):
     try:
         response = store_manager.update_department(department_id, department_obj.department_name)
@@ -87,7 +87,7 @@ async def update_department(department_id: int, department_obj: Department):
         raise HTTPException(status_code=500, detail=str(ex))
 
 # Delete a department
-@app.delete("/departments/{department_id}")
+@app.delete("/departments")
 async def delete_department(department_id: int):
     try:
         response = store_manager.delete_department(department_id)
@@ -115,12 +115,12 @@ async def create_product(product: Product, department_id: int):
 async def get_products():
     try:
         all_products = store_manager.get_all_products()
-        return {"Products": all_products}
+        return {"All Products": all_products}
     except Exception as ex:
         raise HTTPException(status_code=500, detail=str(ex))
 
 # Get single product
-@app.get("/products")
+@app.get("/specific_product")
 async def get_product(product_id: int):
     try:    
         response = store_manager.get_specific_product(product_id)
@@ -131,7 +131,7 @@ async def get_product(product_id: int):
         raise HTTPException(status_code=500, detail=str(ex))
 
 # Update a Product
-@app.put("/products/{product_id}")
+@app.put("/products")
 async def update_product(product_id: int, product:UpdateProductInput):
     try:    
         response = store_manager.update_product(product_id, product.product_name, product.price, product.quantity, product.specifications)
@@ -142,7 +142,7 @@ async def update_product(product_id: int, product:UpdateProductInput):
         raise HTTPException(status_code=500, detail=str(ex))
 
 # Delete a product
-@app.delete("/products/{product_id}")
+@app.delete("/products")
 async def delete_product(product_id: int):
     try:
         response = store_manager.delete_product(product_id)

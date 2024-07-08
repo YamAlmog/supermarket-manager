@@ -14,9 +14,16 @@ class StoresManager:
 
     def __init__(self):
         # Initialize db connections 
-        self.db_url = os.getenv("DATABASE_URL")
+        # self.db_url = os.getenv("DATABASE_URL")
 
-        
+        params = {
+            'host': 'localhost',
+            'port': 5432,
+            'database': database_name,
+            'user': user_name,
+            'password': user_password,
+        }
+        self.db_url = f"postgresql://{params['user']}:{params['password']}@{params['host']}:{params['port']}/{params['database']}"
 
     # create new store. return store id
     def create_store(self, name: str) -> str:
@@ -25,7 +32,7 @@ class StoresManager:
             create_table_query = """
                                 CREATE TABLE IF NOT EXISTS store (
                                     store_id SERIAL PRIMARY KEY,
-                                    store_name VARCHAR(255) NOT NULL
+                                    store_name VARCHAR(255)
                                 );
                                 """
             QUERY = f"INSERT INTO store (store_name) VALUES ('{name}')"
@@ -78,8 +85,8 @@ class StoresManager:
             create_department_table = '''
                                         CREATE TABLE IF NOT EXISTS department (
                                         department_id SERIAL PRIMARY KEY,
-                                        department_name VARCHAR(255) NOT NULL,
-                                        store_id INT NOT NULL,
+                                        department_name VARCHAR(255),
+                                        store_id INT,
                                         FOREIGN KEY (store_id) REFERENCES store(store_id)
                                     );
                                     '''
@@ -191,12 +198,12 @@ class StoresManager:
                 create_product_table = '''
                                         CREATE TABLE IF NOT EXISTS product (
                                         product_id SERIAL PRIMARY KEY,
-                                        product_name VARCHAR(255) NOT NULL,
-                                        price DECIMAL(10, 2) NOT NULL,
-                                        quantity INT NOT NULL,
+                                        product_name VARCHAR(255),
+                                        price DOUBLE PRECISION,
+                                        quantity INT,
                                         specifications TEXT,
-                                        store_id INT NOT NULL,
-                                        department_id INT NOT NULL,
+                                        store_id INT,
+                                        department_id INT,
                                         FOREIGN KEY (store_id) REFERENCES store(store_id),
                                         FOREIGN KEY (department_id) REFERENCES department(department_id)
                                     );
