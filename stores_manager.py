@@ -14,16 +14,16 @@ class StoresManager:
 
     def __init__(self):
         # Initialize db connections 
-        # self.db_url = os.getenv("DATABASE_URL")
+        self.db_url = os.getenv("DATABASE_URL")
 
-        params = {
-            'host': 'localhost',
-            'port': 5432,
-            'database': database_name,
-            'user': user_name,
-            'password': user_password,
-        }
-        self.db_url = f"postgresql://{params['user']}:{params['password']}@{params['host']}:{params['port']}/{params['database']}"
+        # params = {
+        #     'host': 'localhost',
+        #     'port': 5432,
+        #     'database': database_name,
+        #     'user': user_name,
+        #     'password': user_password,
+        # }
+        # self.db_url = f"postgresql://{params['user']}:{params['password']}@{params['host']}:{params['port']}/{params['database']}"
 
     # create new store. return store id
     def create_store(self, name: str) -> str:
