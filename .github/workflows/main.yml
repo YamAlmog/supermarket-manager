@@ -45,7 +45,7 @@ jobs:
       - name: Run Tests
         run: |
           docker-compose -f docker-compose.yml up -d
-          docker-compose -f docker-compose.yml exec -T <your-service-name> pytest --junitxml=results.xml
+          docker-compose -f docker-compose.yml exec -T fastapi_app pytest --junitxml=results.xml
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v3
