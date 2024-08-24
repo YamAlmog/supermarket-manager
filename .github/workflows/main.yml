@@ -12,15 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
-    services:
-      docker:
-        image: docker:20.10.7
-        options: --privileged
-        ports:
-          - 8000:8000
-        volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -37,8 +28,20 @@ jobs:
       - name: Build and Start Containers
         run: docker-compose -f docker-compose.yml up -d --build
 
-      - name: Run Tests
-        run: docker-compose exec -T fastapi_app pytest
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
 
+      - name: Run Tests
+        run: docker-compose -f docker-compose.yml exec -T fastapi_app pytest
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: results.xml
+        
       - name: Stop and Remove Containers
-        run: docker-compose down
+        run: docker-compose -f docker-compose.yml down
