@@ -38,7 +38,7 @@ jobs:
         run: docker-compose -f docker-compose.yml up -d --build
 
       - name: Run Tests
-        run: docker-compose exec -T <your-service-name> pytest
+        run: docker-compose exec -T fastapi_app pytest
 
       - name: Stop and Remove Containers
         run: docker-compose down
