@@ -14,16 +14,7 @@ class StoresManager:
 
     def __init__(self):
         # Initialize db connections 
-        # self.db_url = os.getenv("DATABASE_URL")
-
-        params = {
-            'host': 'localhost',
-            'port': 5432,
-            'database': database_name,
-            'user': user_name,
-            'password': user_password,
-        }
-        self.db_url = f"postgresql://{params['user']}:{params['password']}@{params['host']}:{params['port']}/{params['database']}"
+        self.db_url = os.getenv("DATABASE_URL")
         with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             create_table_query = """
