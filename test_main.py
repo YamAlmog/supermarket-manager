@@ -182,6 +182,7 @@ def test_create_and_get_product():
                         "product_id": 1,
                         "department_id": 1
                         }
+    print(get_response)
     assert get_response.json() == expected_response
 
 

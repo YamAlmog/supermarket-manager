@@ -14,19 +14,16 @@ class StoresManager:
 
     def __init__(self):
         # Initialize db connections 
-        self.db_url = os.getenv("DATABASE_URL")
+        # self.db_url = os.getenv("DATABASE_URL")
 
-        # params = {
-        #     'host': 'localhost',
-        #     'port': 5432,
-        #     'database': database_name,
-        #     'user': user_name,
-        #     'password': user_password,
-        # }
-        # self.db_url = f"postgresql://{params['user']}:{params['password']}@{params['host']}:{params['port']}/{params['database']}"
-
-    # create new store. return store id
-    def create_store(self, name: str) -> str:
+        params = {
+            'host': 'localhost',
+            'port': 5432,
+            'database': database_name,
+            'user': user_name,
+            'password': user_password,
+        }
+        self.db_url = f"postgresql://{params['user']}:{params['password']}@{params['host']}:{params['port']}/{params['database']}"
         with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
             create_table_query = """
@@ -35,9 +32,38 @@ class StoresManager:
                                     store_name VARCHAR(255)
                                 );
                                 """
+            cursor.execute(create_table_query)
+            create_department_table = '''
+                                        CREATE TABLE IF NOT EXISTS department (
+                                        department_id SERIAL PRIMARY KEY,
+                                        department_name VARCHAR(255),
+                                        store_id INT
+                                    );
+                                    '''
+            cursor.execute(create_department_table)
+            create_product_table = '''
+                                        CREATE TABLE IF NOT EXISTS product (
+                                        product_id SERIAL PRIMARY KEY,
+                                        product_name VARCHAR(255),
+                                        store_id INT,
+                                        department_id INT,
+                                        price DOUBLE PRECISION,
+                                        quantity INT,
+                                        specifications TEXT        
+                                    );
+                                    '''
+            cursor.execute(create_product_table)
+            conn.commit()
+            cursor.close()
+
+    # create new store. return store id
+    def create_store(self, name: str) -> str:
+        with psycopg2.connect(self.db_url) as conn:
+            cursor = conn.cursor()
+            
             QUERY = f"INSERT INTO store (store_name) VALUES ('{name}')"
             # Create table if it doesn't exist
-            cursor.execute(create_table_query)
+            # cursor.execute(create_table_query)
             cursor.execute(QUERY)
             conn.commit()
             cursor.close()
@@ -82,15 +108,6 @@ class StoresManager:
     def create_department(self, name: str , store_id: int) -> str:
         with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
-            create_department_table = '''
-                                        CREATE TABLE IF NOT EXISTS department (
-                                        department_id SERIAL PRIMARY KEY,
-                                        department_name VARCHAR(255),
-                                        store_id INT,
-                                        FOREIGN KEY (store_id) REFERENCES store(store_id)
-                                    );
-                                    '''
-            cursor.execute(create_department_table)
 
             IS_STORE_EXIST = f"SELECT EXISTS (SELECT 1 FROM store WHERE store_id = {store_id});"
             
@@ -195,20 +212,6 @@ class StoresManager:
             with psycopg2.connect(self.db_url) as conn:
                 cursor = conn.cursor()
 
-                create_product_table = '''
-                                        CREATE TABLE IF NOT EXISTS product (
-                                        product_id SERIAL PRIMARY KEY,
-                                        product_name VARCHAR(255),
-                                        price DOUBLE PRECISION,
-                                        quantity INT,
-                                        specifications TEXT,
-                                        store_id INT,
-                                        department_id INT,
-                                        FOREIGN KEY (store_id) REFERENCES store(store_id),
-                                        FOREIGN KEY (department_id) REFERENCES department(department_id)
-                                    );
-                                    '''
-                cursor.execute(create_product_table)
                 IS_DEPARTMENT_EXIST = f"SELECT EXISTS (SELECT 1 FROM department WHERE department_id = {department_id});"
                 cursor.execute(IS_DEPARTMENT_EXIST)
                 is_department_exist = cursor.fetchone()
@@ -323,22 +326,37 @@ class StoresManager:
     def reset_all(self) -> str:
         with psycopg2.connect(self.db_url) as conn:
             cursor = conn.cursor()
-            reset_stores = """DELETE FROM store;"""
-            reset_departments = """DELETE FROM department;"""
-            reset_products = """DELETE FROM product;"""
-            cursor.execute(reset_stores)
-            cursor.execute(reset_departments)
-            cursor.execute(reset_products)
-            reset_store_id = """ALTER SEQUENCE store_store_id_seq RESTART WITH 1;"""
-            reset_department_id = """ALTER SEQUENCE department_department_id_seq RESTART WITH 1;"""
-            reset_product_id = """ALTER SEQUENCE product_product_id_seq RESTART WITH 1;"""
-            cursor.execute(reset_store_id)
-            cursor.execute(reset_department_id)
-            cursor.execute(reset_product_id)
+
+            # Check if the tables are not empty before deleting and resetting sequences
+            check_stores = "SELECT EXISTS (SELECT 1 FROM store);"
+            check_departments = "SELECT EXISTS (SELECT 1 FROM department);"
+            check_products = "SELECT EXISTS (SELECT 1 FROM product);"
+
+            cursor.execute(check_stores)
+            stores_not_empty = cursor.fetchone()[0]
+
+            cursor.execute(check_departments)
+            departments_not_empty = cursor.fetchone()[0]
+
+            cursor.execute(check_products)
+            products_not_empty = cursor.fetchone()[0]
+
+            if stores_not_empty:
+                cursor.execute("DELETE FROM store;")
+                cursor.execute("ALTER SEQUENCE store_store_id_seq RESTART WITH 1;")
+
+            if departments_not_empty:
+                cursor.execute("DELETE FROM department;")
+                cursor.execute("ALTER SEQUENCE department_department_id_seq RESTART WITH 1;")
+
+            if products_not_empty:
+                cursor.execute("DELETE FROM product;")
+                cursor.execute("ALTER SEQUENCE product_product_id_seq RESTART WITH 1;")
 
             conn.commit()
             cursor.close()
-            return "Complete a general reset of the entire system"
+            
+        return "Complete a general reset of the entire system"
 
 
     
