@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build:
+  build_and_test:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,23 +28,8 @@ jobs:
       - name: Build and Start Containers
         run: docker-compose -f docker-compose.yml up -d --build
 
-  
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Install Docker Compose
-        run: |
-          curl -L "https://github.com/docker/compose/releases/download/v2.17.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
-          docker-compose version
-
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
       - name: Run Tests
         run: |
-          docker-compose -f docker-compose.yml up -d
           docker-compose -f docker-compose.yml exec -T fastapi_app pytest --junitxml=results.xml
 
       - name: Upload Test Results
